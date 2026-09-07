@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # AMS Backend — ERD-aligned API
 
 Node.js + Express + PostgreSQL + JWT backend for the QR-Based Asset Management System.
@@ -83,3 +84,6 @@ GET /health
 - `/api/dashboard` — summary counts and recent transfers
 
 See `API_CONTRACT.md` and `ERD_IMPLEMENTATION_NOTES.md`.
+=======
+# QB_Ams
+>>>>>>> 76ba60c5810a02cc0dfbc13cb83e4806f87f1ce7
