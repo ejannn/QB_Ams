@@ -80,15 +80,20 @@ CREATE TABLE IF NOT EXISTS assets (
   asset_name VARCHAR(255) NOT NULL,
   qr_id INT UNIQUE NOT NULL REFERENCES asset_qr(qr_id),
   category_id INT NOT NULL REFERENCES categories(category_id),
+  custodian_user_id INT REFERENCES users(user_id), ON DELETE SET NULL,
   serial_no VARCHAR(100),
   brand VARCHAR(100),
   model VARCHAR(100),
+  purchase_date DATE,
+  asset_image_url TEXT,
   status SMALLINT NOT NULL DEFAULT 1 CHECK (status IN (0, 1)),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   created_by INT,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_by INT
 );
+
+
 
 CREATE TABLE IF NOT EXISTS asset_transfer (
   asset_transfer_id SERIAL PRIMARY KEY,
