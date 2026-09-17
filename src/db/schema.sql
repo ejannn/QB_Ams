@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(150) UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
   role_id INT NOT NULL REFERENCES roles(role_id),
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   created_by INT,
