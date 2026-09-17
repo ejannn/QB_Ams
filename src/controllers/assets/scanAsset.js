@@ -43,11 +43,23 @@ async function scanAsset(req, res) {
         });
     }
 
-    return res.json(
-      addAssetLabels(
-        rows[0]
-      )
-    );
+    const asset =
+  addAssetLabels(
+    rows[0]
+  );
+
+if (
+  asset.qrIsActive === false
+) {
+  return res
+    .status(410)
+    .json({
+      error:
+        'QR code is inactive.',
+    });
+}
+
+return res.json(asset);
   } catch (err) {
     console.error(
       'Scan asset error:',
