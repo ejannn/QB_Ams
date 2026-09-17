@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const pool = require('./db/pool');
-
+const reportsRoutes = require('./routes/reports');
 const authRoutes = require('./routes/auth');
 const usersRoutes = require('./routes/users');
 const rbacRoutes = require('./routes/rbac');
@@ -60,6 +60,8 @@ app.use('/api/transfers', transfersRoutes);
 app.use('/api/maintenance', maintenanceRoutes);
 app.use('/api/audit-logs', auditLogsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/reports',reportsRoutes);
+
 
 app.get('/health', async (req, res) => {
   try {
