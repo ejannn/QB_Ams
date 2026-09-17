@@ -15,6 +15,8 @@ const transfersRoutes = require('./routes/transfers');
 const maintenanceRoutes = require('./routes/maintenance');
 const auditLogsRoutes = require('./routes/auditLogs');
 const dashboardRoutes = require('./routes/dashboard');
+const custodyRoutes = require('./routes/custody');
+const photoRoutes = require('./routes/photos');
 
 if (!process.env.JWT_SECRET) {
   console.error('JWT_SECRET is required. Add it to .env before starting the server.');
@@ -46,9 +48,11 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/rbac', rbacRoutes);
 app.use('/api/assets', assetsRoutes);
+app.use('/api/assets',custodyRoutes);
+app.use('/api/assets',photoRoutes);
 app.use('/api/categories', categoriesRoutes);
 app.use('/api/locations', locationsRoutes);
-app.use('/api/rooms', locationsRoutes); // temporary compatibility alias
+app.use('/api/rooms', locationsRoutes); 
 app.use('/api/asset-qr', assetQrRoutes);
 app.use('/api/transfers', transfersRoutes);
 app.use('/api/maintenance', maintenanceRoutes);

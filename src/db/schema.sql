@@ -83,12 +83,15 @@ CREATE TABLE IF NOT EXISTS assets (
   serial_no VARCHAR(100),
   brand VARCHAR(100),
   model VARCHAR(100),
+  purchase_date DATE,
   status SMALLINT NOT NULL DEFAULT 1 CHECK (status IN (0, 1)),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   created_by INT,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_by INT
 );
+
+
 
 CREATE TABLE IF NOT EXISTS asset_transfer (
   asset_transfer_id SERIAL PRIMARY KEY,
@@ -123,6 +126,36 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS asset_custody (
+  asset_custody_id SERIAL PRIMARY KEY,
+  asset_id INT NOT NULL REFERENCES assets(asset_id) ON DELETE CASCADE,
+  custodian_user_id INT NOT NULL REFERENCES users(user_id),
+  assigned_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  returned_at TIMESTAMPTZ NULL,
+  assigned_by INT REFERENCES users(user_id),
+  remarks VARCHAR(500),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_asset_active_custody
+ON asset_custody(asset_id)
+WHERE returned_at IS NULL;
+
+CREATE TABLE IF NOT EXISTS asset_photos (
+  asset_photo_id SERIAL PRIMARY KEY,
+  asset_id INT NOT NULL REFERENCES assets(asset_id) ON DELETE CASCADE,
+  image_url TEXT NOT NULL,
+  storage_key TEXT,
+  caption VARCHAR(255),
+  is_primary BOOLEAN NOT NULL DEFAULT FALSE,
+  uploaded_by INT REFERENCES users(user_id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_asset_primary_photo
+ON asset_photos(asset_id)
+WHERE is_primary IS TRUE;
+
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_assets_category ON assets(category_id);
 CREATE INDEX IF NOT EXISTS idx_assets_status ON assets(status);
@@ -131,3 +164,5 @@ CREATE INDEX IF NOT EXISTS idx_asset_transfer_location ON asset_transfer(to_loca
 CREATE INDEX IF NOT EXISTS idx_maintenance_asset_created ON maintenance(asset_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_record ON audit_logs(table_name, record_id);
+
+
