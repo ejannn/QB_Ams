@@ -136,7 +136,7 @@ CREATE TABLE IF NOT EXISTS asset_custody (
   assigned_by INT REFERENCES users(user_id),
   remarks VARCHAR(500),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE UNIQUE INDEX IF NOT EXISTS uq_asset_active_custody
 ON asset_custody(asset_id)
