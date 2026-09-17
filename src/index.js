@@ -30,7 +30,9 @@ const allowedOrigins = (process.env.CORS_ORIGIN || '*')
   .map((v) => v.trim())
   .filter(Boolean);
 app.use(cors({
-  origin: allowedOrigins.includes('*') ? true : allowedOrigins,
+  origin:  ['http://localhost:5173',
+            'http://localhost:5174'
+  ],
   credentials: true,
 }));
 app.use(express.json({ limit: '2mb' }));
