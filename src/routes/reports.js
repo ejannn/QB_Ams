@@ -128,6 +128,16 @@ router.get(
 
     try {
 
+      // Viewing reports follows Reports:Read; CSV generation is Admin-only.
+      if (req.query.format !== undefined) {
+        if (req.query.format !== 'csv') {
+          return res.status(400).json({ error: 'Unsupported report format.' });
+        }
+        if (String(req.user?.role || '').trim().toLowerCase() !== 'admin') {
+          return res.status(403).json({ error: 'Only administrators may export reports to CSV.' });
+        }
+      }
+
       const conditions = [];
       const values = [];
 
@@ -460,14 +470,41 @@ router.get(
         );
 
 
-      return res.json({
-        count:
-          rows.length,
+      const reportRows = rows.map(assetLabels);
 
-        rows:
-          rows.map(
-            assetLabels
-          ),
+      if (req.query.format === 'csv') {
+        // Keep the export columns consistent with the mobile report.
+        const columns = [
+          ['Code', (r) => r.assetId],
+          ['Name', (r) => r.assetName],
+          ['Category', (r) => r.categoryName || 'Unspecified'],
+          ['Room', (r) => r.currentLocationName || 'Unassigned'],
+          ['Condition', (r) => r.repairStatus === 2 ? 'Trash' :
+            r.condition === 0 ? 'New' : r.condition === 1 ? 'Good' :
+            r.condition === 2 ? 'For Repair/ Damaged' : 'Unknown'],
+          ['Status', (r) => r.statusLabel || 'Unknown'],
+          ['Assigned To', (r) => r.custodianName || 'Unassigned'],
+          ['Remarks', () => ''],
+        ];
+        const csvCell = (value) => {
+          const raw = String(value ?? '');
+          // Avoid Excel/Sheets formula interpretation, including after whitespace.
+          const safe = /^\s*[=+\-@]/.test(raw) ? "'" + raw : raw;
+          return '"' + safe.replace(/"/g, '""') + '"';
+        };
+        const head = columns.map(([name]) => csvCell(name)).join(',');
+        const lines = reportRows.map((r) =>
+          columns.map(([, pick]) => csvCell(pick(r))).join(',')
+        );
+        res.set('Content-Type', 'text/csv; charset=utf-8');
+        res.set('Content-Disposition', 'attachment; filename="qrbams-inventory-report.csv"');
+        res.set('Cache-Control', 'no-store');
+        return res.status(200).send('\uFEFF' + [head, ...lines].join('\r\n'));
+      }
+
+      return res.json({
+        count: reportRows.length,
+        rows: reportRows,
       });
 
     } catch (err) {
