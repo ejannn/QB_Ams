@@ -17,6 +17,7 @@ const auditLogsRoutes = require('./routes/auditLogs');
 const dashboardRoutes = require('./routes/dashboard');
 const custodyRoutes = require('./routes/custody');
 const photoRoutes = require('./routes/photos');
+const { reconcilePendingDeletions } = require('./services/localPhotoStorage');
 
 if (!process.env.JWT_SECRET) {
   console.error('JWT_SECRET is required. Add it to .env before starting the server.');
@@ -82,4 +83,5 @@ app.use((err, req, res, next) => {
 const PORT = Number(process.env.PORT) || 3000;
 app.listen(PORT, () => {
   console.log(`AMS backend running on http://localhost:${PORT}`);
+  reconcilePendingDeletions(pool).catch(err => console.error('Photo storage reconciliation failed:', err));
 });

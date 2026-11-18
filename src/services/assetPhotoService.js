@@ -459,73 +459,40 @@ async function setPrimaryPhoto(
 
 
 // ==========================================================
-// DELETE PHOTO
+// DELETE PHOTO (primary is automatically promoted)
 // ==========================================================
 
-async function deletePhoto(
-  client,
-  {
-    assetId,
-    photoId,
-  }
-) {
-  const existing =
-    await client.query(
-      `
-      SELECT
-        asset_photo_id,
-        is_primary
-
-      FROM asset_photos
-
-      WHERE
-        asset_photo_id = $1
-        AND asset_id = $2
-
-      FOR UPDATE
-      `,
-      [
-        photoId,
-        assetId,
-      ]
-    );
-
-
-  if (!existing.rows.length) {
-    return {
-      found: false,
-      deletedPhotoId: null,
-      wasPrimary: false,
-    };
-  }
-
-
-  const wasPrimary =
-    existing.rows[0]
-      .is_primary;
-
-
-  await client.query(
-    `
-    DELETE FROM asset_photos
-
-    WHERE
-      asset_photo_id = $1
-      AND asset_id = $2
-    `,
-    [
-      photoId,
-      assetId,
-    ]
+async function deletePhoto(client, { assetId, photoId }) {
+  const existing = await client.query(
+    `SELECT asset_photo_id, is_primary, storage_key
+     FROM asset_photos WHERE asset_photo_id = $1 AND asset_id = $2 FOR UPDATE`,
+    [photoId, assetId]
   );
-
-
-  return {
-    found: true,
-    deletedPhotoId:
-      photoId,
-    wasPrimary,
-  };
+  if (!existing.rows.length) {
+    return { found: false, deletedPhotoId: null, wasPrimary: false, promotedPhotoId: null };
+  }
+  const wasPrimary = existing.rows[0].is_primary;
+  await client.query(
+    'DELETE FROM asset_photos WHERE asset_photo_id = $1 AND asset_id = $2',
+    [photoId, assetId]
+  );
+  let promotedPhotoId = null;
+  if (wasPrimary) {
+    const next = await client.query(
+      `SELECT asset_photo_id FROM asset_photos
+       WHERE asset_id = $1 ORDER BY created_at DESC, asset_photo_id DESC
+       LIMIT 1 FOR UPDATE`,
+      [assetId]
+    );
+    if (next.rows.length) {
+      promotedPhotoId = next.rows[0].asset_photo_id;
+      await client.query(
+        'UPDATE asset_photos SET is_primary = TRUE, updated_at = NOW() WHERE asset_photo_id = $1',
+        [promotedPhotoId]
+      );
+    }
+  }
+  return { found: true, deletedPhotoId: photoId, wasPrimary, promotedPhotoId };
 }
 
 

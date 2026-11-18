@@ -13,6 +13,7 @@ const {
 const {
   addPhoto,
 } = require('../../services/assetPhotoService');
+const { MAX_PHOTOS_PER_ASSET } = require('../../services/localPhotoStorage');
 
 
 async function addAssetPhoto(
@@ -48,10 +49,8 @@ async function addAssetPhoto(
       );
 
 
-    const storageKey =
-      nullableText(
-        req.body.storageKey
-      );
+    // Never accept storage_key from an untrusted JSON request.
+    const storageKey = null;
 
 
     const caption =
@@ -123,6 +122,15 @@ async function addAssetPhoto(
         });
     }
 
+
+    const photoCount = await client.query(
+      'SELECT COUNT(*)::int AS count FROM asset_photos WHERE asset_id = $1',
+      [assetId]
+    );
+    if (photoCount.rows[0].count >= MAX_PHOTOS_PER_ASSET) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ error: `Maximum ${MAX_PHOTOS_PER_ASSET} photos per asset.` });
+    }
 
     const result =
       await addPhoto(
